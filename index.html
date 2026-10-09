@@ -2,158 +2,415 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тайный Грааль — Диалоги знакомства</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=MedievalSharp&display=swap" rel="stylesheet">
 <style>
+  * { box-sizing: border-box; }
+
   body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #1a1a2e;
-    color: #eee;
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    font-family: 'Cinzel', 'Times New Roman', serif;
+    color: #e8dfc8;
+    background: #0a0e1a;
+    background-image:
+      radial-gradient(ellipse at top, #1a2340 0%, #0a0e1a 60%),
+      radial-gradient(ellipse at bottom, #2a1a0a 0%, transparent 70%);
+    background-attachment: fixed;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 20px;
   }
-  h1 { color: #f4c542; margin-bottom: 5px; }
-  h2 { color: #c9a227; font-size: 18px; margin-top: 0; }
+
+  /* Декоративные золотые линии сверху и снизу */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #c9a227, #f4d03f, #c9a227, transparent);
+    z-index: 100;
+  }
+  body::before { top: 0; }
+  body::after { bottom: 0; }
+
+  h1 {
+    font-family: 'MedievalSharp', 'Cinzel', serif;
+    font-size: 42px;
+    margin: 10px 0 5px;
+    color: #f4d03f;
+    text-shadow:
+      0 0 20px rgba(244, 208, 63, 0.5),
+      0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 3px;
+    text-align: center;
+  }
+
+  .subtitle {
+    color: #8b9bb4;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    text-align: center;
+  }
 
   .container {
     display: flex;
-    gap: 20px;
+    gap: 25px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1300px;
     flex-wrap: wrap;
     justify-content: center;
   }
 
   .panel {
-    background: #16213e;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    background: linear-gradient(145deg, rgba(20, 28, 48, 0.95), rgba(12, 16, 28, 0.95));
+    border: 2px solid #3a4a6b;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow:
+      0 0 30px rgba(0, 0, 0, 0.6),
+      inset 0 0 40px rgba(0, 0, 0, 0.4);
     flex: 1;
-    min-width: 300px;
+    min-width: 320px;
+    position: relative;
   }
 
+  /* Золотые уголки на панелях */
+  .panel::before, .panel::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 2px solid #c9a227;
+    pointer-events: none;
+  }
+  .panel::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+  .panel::after { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+  .panel h3 {
+    font-family: 'MedievalSharp', serif;
+    color: #f4d03f;
+    margin: 0 0 18px;
+    font-size: 18px;
+    letter-spacing: 2px;
+    text-align: center;
+    border-bottom: 1px solid #3a4a6b;
+    padding-bottom: 10px;
+  }
+
+  /* ===== Персонажи ===== */
   .characters {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-    max-height: 500px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 14px;
+    max-height: 620px;
     overflow-y: auto;
+    padding: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: #c9a227 #0a0e1a;
   }
+
+  .characters::-webkit-scrollbar { width: 8px; }
+  .characters::-webkit-scrollbar-track { background: #0a0e1a; border-radius: 4px; }
+  .characters::-webkit-scrollbar-thumb { background: #c9a227; border-radius: 4px; }
 
   .char-card {
-    background: #0f3460;
-    border: 2px solid #1a1a2e;
-    border-radius: 8px;
-    padding: 10px;
+    background: radial-gradient(circle at center, #1a2340, #0f1525);
+    border: 2px solid #3a4a6b;
+    border-radius: 12px;
+    padding: 10px 5px 8px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
     text-align: center;
-    font-size: 13px;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
   }
 
-  .char-card:hover { border-color: #f4c542; }
+  .char-card:hover {
+    border-color: #c9a227;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(201, 162, 39, 0.3);
+  }
 
   .char-card.active {
-    background: #533483;
-    border-color: #f4c542;
-    box-shadow: 0 0 10px #f4c542;
+    background: radial-gradient(circle at center, #3a2a0a, #1a1205);
+    border-color: #f4d03f;
+    box-shadow:
+      0 0 25px rgba(244, 208, 63, 0.6),
+      inset 0 0 20px rgba(244, 208, 63, 0.1);
+    transform: translateY(-2px);
   }
 
-  .char-card .icon { font-size: 24px; display: block; margin-bottom: 5px; }
+  /* Круглая иконка */
+  .char-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #0a0e1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    border: 3px solid #3a4a6b;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+    position: relative;
+  }
 
+  .char-card.active .char-icon {
+    border-color: #f4d03f;
+    box-shadow: 0 0 15px rgba(244, 208, 63, 0.7);
+  }
+
+  .char-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .char-name {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #c8d0e0;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .char-card.active .char-name {
+    color: #f4d03f;
+    text-shadow: 0 0 8px rgba(244, 208, 63, 0.5);
+  }
+
+  /* ===== Центральный блок с фразой ===== */
+  .phrase-display {
+    background:
+      linear-gradient(145deg, rgba(10, 14, 26, 0.9), rgba(20, 28, 48, 0.9));
+    border: 2px solid #c9a227;
+    border-radius: 14px;
+    padding: 40px 30px;
+    text-align: center;
+    font-family: 'MedievalSharp', serif;
+    font-size: 24px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    line-height: 1.5;
+    color: #f4d03f;
+    text-shadow: 0 0 15px rgba(244, 208, 63, 0.4);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 1px;
+    transition: all 0.4s ease;
+  }
+
+  .phrase-display.fade-in {
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .phrase-display::before,
+  .phrase-display::after {
+    content: '✦';
+    position: absolute;
+    color: #c9a227;
+    font-size: 20px;
+    opacity: 0.6;
+  }
+  .phrase-display::before { top: 10px; left: 15px; }
+  .phrase-display::after { bottom: 10px; right: 15px; }
+
+  /* ===== Прогресс-бар ===== */
+  .progress-wrapper {
+    margin-bottom: 15px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #0a0e1a;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #3a4a6b;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c9a227, #f4d03f, #c9a227);
+    width: 0%;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 10px rgba(244, 208, 63, 0.6);
+  }
+
+  .progress-text {
+    color: #8b9bb4;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ===== Кнопки ===== */
   .controls {
     display: flex;
     gap: 10px;
     margin-top: 15px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   button {
-    background: #f4c542;
-    color: #1a1a2e;
-    border: none;
-    padding: 10px 18px;
+    font-family: 'Cinzel', serif;
+    background: linear-gradient(145deg, #c9a227, #8b7018);
+    color: #0a0e1a;
+    border: 2px solid #f4d03f;
+    padding: 11px 20px;
     border-radius: 8px;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
-    font-size: 14px;
-    transition: transform 0.1s;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
   }
 
-  button:hover { transform: scale(1.05); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  .phrase-display {
-    background: #0f3460;
-    border-radius: 12px;
-    padding: 30px;
-    text-align: center;
-    font-size: 22px;
-    min-height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 15px;
-    line-height: 1.4;
-    border: 2px solid #533483;
+  button:hover:not(:disabled) {
+    background: linear-gradient(145deg, #f4d03f, #c9a227);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(244, 208, 63, 0.5);
   }
 
-  .progress {
-    color: #aaa;
-    font-size: 14px;
-    margin-top: 5px;
+  button:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   }
 
+  button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+  }
+
+  /* Кнопки в левой панели — меньше */
+  .panel .controls button {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+
+  /* ===== Лог ===== */
   .log {
-    max-height: 250px;
+    max-height: 220px;
     overflow-y: auto;
-    background: #0a0a1a;
+    background: #0a0e1a;
+    border: 1px solid #3a4a6b;
     border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-    margin-top: 15px;
+    padding: 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    margin-top: 18px;
+    scrollbar-width: thin;
+    scrollbar-color: #c9a227 #0a0e1a;
   }
+
+  .log::-webkit-scrollbar { width: 6px; }
+  .log::-webkit-scrollbar-track { background: #0a0e1a; }
+  .log::-webkit-scrollbar-thumb { background: #c9a227; border-radius: 3px; }
 
   .log-item {
-    padding: 5px 8px;
-    border-bottom: 1px solid #222;
-    color: #888;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1a2340;
+    color: #6a7a94;
+    font-size: 12px;
+    line-height: 1.4;
+    transition: all 0.2s ease;
   }
 
   .log-item.current {
-    color: #f4c542;
-    font-weight: bold;
-    background: #1a1a2e;
+    color: #f4d03f;
+    font-weight: 700;
+    background: rgba(244, 208, 63, 0.08);
+    border-left: 3px solid #f4d03f;
     border-radius: 4px;
+    padding-left: 12px;
   }
 
   audio { display: none; }
 
-  .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+  /* ===== Табы режима голоса ===== */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    justify-content: center;
+  }
+
   .tab {
-    padding: 6px 12px;
-    background: #0f3460;
+    padding: 8px 16px;
+    background: #0a0e1a;
+    border: 1px solid #3a4a6b;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #8b9bb4;
+    transition: all 0.2s ease;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
   }
-  .tab.active { background: #533483; color: #f4c542; }
+
+  .tab:hover {
+    border-color: #c9a227;
+    color: #c9a227;
+  }
+
+  .tab.active {
+    background: linear-gradient(145deg, #3a2a0a, #1a1205);
+    border-color: #f4d03f;
+    color: #f4d03f;
+    box-shadow: 0 0 12px rgba(244, 208, 63, 0.4);
+  }
+
+  /* ===== Мобильная адаптация ===== */
+  @media (max-width: 700px) {
+    h1 { font-size: 28px; letter-spacing: 2px; }
+    .subtitle { font-size: 11px; letter-spacing: 2px; }
+    .phrase-display { font-size: 18px; padding: 28px 18px; }
+    .container { flex-direction: column; }
+    .characters { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+    .char-icon { width: 60px; height: 60px; font-size: 30px; }
+    .char-name { font-size: 10px; }
+  }
 </style>
 </head>
 <body>
 
-<h1>⚔️ Тайный Грааль</h1>
-<h2>Интерактивный проигрыватель диалогов знакомства</h2>
+<h1>Тайный Грааль</h1>
+<div class="subtitle">Диалоги знакомства</div>
 
 <div class="container">
 
   <!-- ЛЕВАЯ ПАНЕЛЬ: выбор персонажей -->
   <div class="panel">
-    <h3>Выберите персонажей в игре:</h3>
+    <h3>Персонажи в игре</h3>
     <div class="characters" id="charactersList"></div>
     <div class="controls">
       <button onclick="selectAll()">Все</button>
@@ -164,21 +421,28 @@
 
   <!-- ПРАВАЯ ПАНЕЛЬ: проигрыватель -->
   <div class="panel">
+    <h3>Проигрыватель</h3>
+
     <div class="tabs">
-      <div class="tab active" onclick="setVoiceMode('tts')">🔊 Синтез речи</div>
-      <div class="tab" onclick="setVoiceMode('audio')">🎵 Аудиофайлы</div>
+      <div class="tab active" onclick="setVoiceMode('tts', event)">🔊 Синтез речи</div>
+      <div class="tab" onclick="setVoiceMode('audio', event)">🎵 Аудиофайлы</div>
     </div>
 
     <div class="phrase-display" id="phraseDisplay">
       Нажмите «Старт», чтобы начать
     </div>
 
-    <div class="progress" id="progress">Фраза 0 из 0</div>
+    <div class="progress-wrapper">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progress">Фраза 0 из 0</div>
+    </div>
 
     <div class="controls">
-      <button id="btnStart" onclick="startSequence()">▶️ Старт</button>
-      <button id="btnPause" onclick="pauseSequence()" disabled>⏸️ Пауза</button>
-      <button id="btnNext" onclick="nextPhrase()" disabled>⏭️ Далее</button>
+      <button id="btnStart" onclick="startSequence()">▶ Старт</button>
+      <button id="btnPause" onclick="pauseSequence()" disabled>⏸ Пауза</button>
+      <button id="btnNext" onclick="nextPhrase()" disabled>⏭ Далее</button>
       <button id="btnReset" onclick="resetSequence()">🔄 Сброс</button>
     </div>
 
@@ -190,42 +454,38 @@
 <audio id="audioPlayer"></audio>
 
 <script>
-// ====================== ДАННЫЕ ======================
+// ====================== ДАННЫЕ ПЕРСОНАЖЕЙ ======================
 
-// Список всех персонажей с их характеристиками
 const ALL_CHARACTERS = [
-  { id: 'arthur',      name: 'Артур',         icon: '👑', faction: 'good', base: false },
-  { id: 'morgana',     name: 'Леди Моргана',  icon: '🧙‍♀️', faction: 'evil', base: true  },
-  { id: 'heir',        name: 'Наследница',    icon: '👸', faction: 'evil', base: false },
-  { id: 'werewolf',    name: 'Оборотень',     icon: '🐺', faction: 'evil', base: false },
-  { id: 'duke',        name: 'Герцог',        icon: '🛡️', faction: 'good', base: false },
-  { id: 'count',       name: 'Граф',          icon: '⚜️', faction: 'good', base: false },
-  { id: 'priest',      name: 'Священник',     icon: '⛪', faction: 'good', base: false },
-  { id: 'huntress',    name: 'Слепая охотница', icon: '🏹', faction: 'evil', base: false },
-  { id: 'renegade',    name: 'Перебежчик',    icon: '🔄', faction: 'evil', base: false },
-  { id: 'percival',    name: 'Персиваль',     icon: '🦅', faction: 'good', base: false },
-  { id: 'lancelot_g',  name: 'Добрый Ланселот', icon: '⚔️', faction: 'good', base: false },
-  { id: 'lancelot_e',  name: 'Злой Ланселот', icon: '🗡️', faction: 'evil', base: false },
-  { id: 'outsider',    name: 'Чужак',         icon: '👤', faction: 'evil', base: false },
-  { id: 'guardian',    name: 'Стражница',     icon: '🔮', faction: 'good', base: false },
-  { id: 'trickster',   name: 'Мошенница',     icon: '🎭', faction: 'evil', base: false },
-  { id: 'accuser',     name: 'Обличительница', icon: '⚖️', faction: 'evil', base: false },
-  { id: 'madman',      name: 'Безумец',       icon: '🤪', faction: 'evil', base: false },
-  { id: 'brute',       name: 'Верзила',       icon: '💪', faction: 'evil', base: false },
-  { id: 'apprentice',  name: 'Подмастерье',   icon: '🔨', faction: 'good', base: false },
-  { id: 'rebel',       name: 'Смутьянка',     icon: '🌪️', faction: 'good', base: false },
-  { id: 'youth',       name: 'Юнец',          icon: '🧒', faction: 'good', base: false },
-  { id: 'reluctant',   name: 'Лидер поневоле', icon: '😰', faction: 'good', base: false },
-  { id: 'braggart',    name: 'Хвастун',       icon: '📢', faction: 'evil', base: false },
-  { id: 'saboteur',    name: 'Диверсант',     icon: '💣', faction: 'evil', base: false },
-  { id: 'galahad',     name: 'Галахад',       icon: '🏆', faction: 'good', base: false },
+  { id: 'arthur',      name: 'Артур',           icon: 'img/arthur.png',       faction: 'good', base: false },
+  { id: 'morgana',     name: 'Леди Моргана',    icon: 'img/morgana.png',      faction: 'evil', base: true  },
+  { id: 'heir',        name: 'Наследница',      icon: 'img/scion.png',        faction: 'evil', base: false },
+  { id: 'werewolf',    name: 'Оборотень',       icon: 'img/changeling.png',   faction: 'evil', base: false },
+  { id: 'duke',        name: 'Герцог',          icon: 'img/duke.png',         faction: 'good', base: false },
+  { id: 'count',       name: 'Граф',            icon: 'img/archduke.png',     faction: 'good', base: false },
+  { id: 'priest',      name: 'Священник',       icon: 'img/cleric.png',       faction: 'good', base: false },
+  { id: 'huntress',    name: 'Слепая охотница', icon: 'img/blind_hunter.png', faction: 'evil', base: false },
+  { id: 'renegade',    name: 'Перебежчик',      icon: 'img/mutineer.png',     faction: 'evil', base: false },
+  { id: 'percival',    name: 'Персиваль',       icon: '🦅',                   faction: 'good', base: false },
+  { id: 'lancelot_g',  name: 'Добрый Ланселот', icon: '⚔️',                   faction: 'good', base: false },
+  { id: 'lancelot_e',  name: 'Злой Ланселот',   icon: '🗡️',                   faction: 'evil', base: false },
+  { id: 'outsider',    name: 'Чужак',           icon: '👤',                   faction: 'evil', base: false },
+  { id: 'guardian',    name: 'Стражница',       icon: '🔮',                   faction: 'good', base: false },
+  { id: 'trickster',   name: 'Мошенница',       icon: 'img/trickster.png',    faction: 'evil', base: false },
+  { id: 'accuser',     name: 'Обличительница',  icon: 'img/revealer.png',     faction: 'evil', base: false },
+  { id: 'madman',      name: 'Безумец',         icon: 'img/lunatic.png',      faction: 'evil', base: false },
+  { id: 'brute',       name: 'Верзила',         icon: 'img/brute.png',        faction: 'evil', base: false },
+  { id: 'apprentice',  name: 'Подмастерье',     icon: 'img/apprentice.png',   faction: 'good', base: false },
+  { id: 'rebel',       name: 'Смутьянка',       icon: 'img/troublemaker.png', faction: 'good', base: false },
+  { id: 'youth',       name: 'Юнец',            icon: 'img/youth.png',        faction: 'good', base: false },
+  { id: 'reluctant',   name: 'Лидер поневоле',  icon: '😰',                   faction: 'good', base: false },
+  { id: 'braggart',    name: 'Хвастун',         icon: '📢',                   faction: 'evil', base: false },
+  { id: 'saboteur',    name: 'Диверсант',       icon: '💣',                   faction: 'evil', base: false },
+  { id: 'galahad',     name: 'Галахад',         icon: '🏆',                   faction: 'good', base: false },
 ];
 
 // ====================== ГЕНЕРАЦИЯ ФРАЗ ======================
 
-/**
- * Строит последовательность фраз на основе выбранных персонажей.
- */
 function buildPhrases(selected) {
   const has = (id) => selected.includes(id);
   const phrases = [];
@@ -236,7 +496,13 @@ function buildPhrases(selected) {
     audio: '01_vse_zakroyte_glaza.mp3'
   });
 
-  // --- Этап 2: Злые (кроме Чужака и Слепой охотницы) ---
+  // --- Этап 2: Злые (динамическая фраза) ---
+  const hiddenEvil = [];
+  if (has('outsider'))   hiddenEvil.push('чужака');
+  if (has('renegade'))   hiddenEvil.push('перебежчика');
+  if (has('lancelot_e')) hiddenEvil.push('злого Ланселота');
+  if (has('huntress'))   hiddenEvil.push('слепой охотницы');
+
   if (has('huntress')) {
     phrases.push({
       text: 'Слепая охотница, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
@@ -256,132 +522,72 @@ function buildPhrases(selected) {
     });
   }
 
-  phrases.push({
-    text: 'Приверженцы зла, кроме чужака, перебежчика, злого Ланселота и слепой охотницы, откройте глаза и оглядитесь, чтобы узнать друг друга.',
-    audio: '05_evil_otkroyte.mp3'
-  });
+  let evilOpenText = 'Приверженцы зла';
+  if (hiddenEvil.length > 0) {
+    if (hiddenEvil.length === 1) {
+      evilOpenText += `, кроме ${hiddenEvil[0]},`;
+    } else if (hiddenEvil.length === 2) {
+      evilOpenText += `, кроме ${hiddenEvil[0]} и ${hiddenEvil[1]},`;
+    } else {
+      const last = hiddenEvil.pop();
+      evilOpenText += `, кроме ${hiddenEvil.join(', ')} и ${last},`;
+    }
+  }
+  evilOpenText += ' откройте глаза и оглядитесь, чтобы узнать друг друга.';
 
-  phrases.push({
-    text: 'Приверженцы зла, закройте глаза.',
-    audio: '06_evil_zakroyte.mp3'
-  });
+  phrases.push({ text: evilOpenText, audio: '05_evil_otkroyte.mp3' });
+  phrases.push({ text: 'Приверженцы зла, закройте глаза.', audio: '06_evil_zakroyte.mp3' });
 
   if (has('huntress')) {
-    phrases.push({
-      text: 'Слепая охотница, убери большой палец.',
-      audio: '07_huntress_ubral.mp3'
-    });
+    phrases.push({ text: 'Слепая охотница, убери большой палец.', audio: '07_huntress_ubral.mp3' });
   }
   if (has('renegade')) {
-    phrases.push({
-      text: 'Перебежчик, убери большой палец.',
-      audio: '08_renegade_ubral.mp3'
-    });
+    phrases.push({ text: 'Перебежчик, убери большой палец.', audio: '08_renegade_ubral.mp3' });
   }
   if (has('lancelot_e')) {
-    phrases.push({
-      text: 'Злой Ланселот, убери большой палец.',
-      audio: '09_lancelot_e_ubral.mp3'
-    });
+    phrases.push({ text: 'Злой Ланселот, убери большой палец.', audio: '09_lancelot_e_ubral.mp3' });
   }
 
   // --- Этап 3: Чужак ---
   if (has('outsider')) {
-    phrases.push({
-      text: 'Приверженцы зла, поднимите большой палец.',
-      audio: '10_evil_palec_up.mp3'
-    });
-    phrases.push({
-      text: 'Чужак, открой глаза и оглядись, чтобы узнать приверженцев зла.',
-      audio: '11_outsider_otkroy.mp3'
-    });
-    phrases.push({
-      text: 'Чужак, закрой глаза.',
-      audio: '12_outsider_zakroy.mp3'
-    });
-    phrases.push({
-      text: 'Приверженцы зла, уберите большой палец.',
-      audio: '13_evil_palec_down.mp3'
-    });
+    phrases.push({ text: 'Приверженцы зла, поднимите большой палец.', audio: '10_evil_palec_up.mp3' });
+    phrases.push({ text: 'Чужак, открой глаза и оглядись, чтобы узнать приверженцев зла.', audio: '11_outsider_otkroy.mp3' });
+    phrases.push({ text: 'Чужак, закрой глаза.', audio: '12_outsider_zakroy.mp3' });
+    phrases.push({ text: 'Приверженцы зла, уберите большой палец.', audio: '13_evil_palec_down.mp3' });
   }
 
   // --- Этап 4: Артур и Леди Моргана ---
   if (has('arthur')) {
-    phrases.push({
-      text: 'Леди Моргана, подними большой палец, чтобы Артур узнал, кто ты.',
-      audio: '14_morgana_palec.mp3'
-    });
-    phrases.push({
-      text: 'Артур, открой глаза и оглядись, чтобы узнать, кто леди Моргана.',
-      audio: '15_arthur_otkroy.mp3'
-    });
-    phrases.push({
-      text: 'Артур, закрой глаза.',
-      audio: '16_arthur_zakroy.mp3'
-    });
-    phrases.push({
-      text: 'Леди Моргана, убери большой палец.',
-      audio: '17_morgana_ubrala.mp3'
-    });
+    phrases.push({ text: 'Леди Моргана, подними большой палец, чтобы Артур узнал, кто ты.', audio: '14_morgana_palec.mp3' });
+    phrases.push({ text: 'Артур, открой глаза и оглядись, чтобы узнать, кто леди Моргана.', audio: '15_arthur_otkroy.mp3' });
+    phrases.push({ text: 'Артур, закрой глаза.', audio: '16_arthur_zakroy.mp3' });
+    phrases.push({ text: 'Леди Моргана, убери большой палец.', audio: '17_morgana_ubrala.mp3' });
   }
 
   // --- Этап 5: Священник и Персиваль ---
   if (has('priest') && has('percival')) {
-    phrases.push({
-      text: 'Священник, подними большой палец, чтобы Персиваль узнал, кто ты.',
-      audio: '18_priest_palec.mp3'
-    });
-    phrases.push({
-      text: 'Персиваль, открой глаза и оглядись, чтобы узнать, кто священник.',
-      audio: '19_percival_otkroy.mp3'
-    });
-    phrases.push({
-      text: 'Персиваль, закрой глаза.',
-      audio: '20_percival_zakroy.mp3'
-    });
-    phrases.push({
-      text: 'Священник, убери большой палец.',
-      audio: '21_priest_ubral.mp3'
-    });
+    phrases.push({ text: 'Священник, подними большой палец, чтобы Персиваль узнал, кто ты.', audio: '18_priest_palec.mp3' });
+    phrases.push({ text: 'Персиваль, открой глаза и оглядись, чтобы узнать, кто священник.', audio: '19_percival_otkroy.mp3' });
+    phrases.push({ text: 'Персиваль, закрой глаза.', audio: '20_percival_zakroy.mp3' });
+    phrases.push({ text: 'Священник, убери большой палец.', audio: '21_priest_ubral.mp3' });
   }
 
   // --- Этап 6: Священник и Лидер ---
   if (has('priest')) {
-    phrases.push({
-      text: 'Лидер, подними большой палец, если ты приверженец зла.',
-      audio: '22_leader_palec.mp3'
-    });
-    phrases.push({
-      text: 'Священник, открой глаза.',
-      audio: '23_priest_otkroy.mp3'
-    });
-    phrases.push({
-      text: 'Священник, закрой глаза.',
-      audio: '24_priest_zakroy.mp3'
-    });
-    phrases.push({
-      text: 'Лидер, убери большой палец.',
-      audio: '25_leader_ubral.mp3'
-    });
+    phrases.push({ text: 'Лидер, подними большой палец, если ты приверженец зла.', audio: '22_leader_palec.mp3' });
+    phrases.push({ text: 'Священник, открой глаза.', audio: '23_priest_otkroy.mp3' });
+    phrases.push({ text: 'Священник, закрой глаза.', audio: '24_priest_zakroy.mp3' });
+    phrases.push({ text: 'Лидер, убери большой палец.', audio: '25_leader_ubral.mp3' });
   }
 
   // --- Этап 7: Ланселоты ---
   if (has('lancelot_g') && has('lancelot_e')) {
-    phrases.push({
-      text: 'Добрый Ланселот и злой Ланселот, откройте глаза, чтобы узнать друг друга.',
-      audio: '26_lancelots_otkroyte.mp3'
-    });
-    phrases.push({
-      text: 'Добрый Ланселот и злой Ланселот, закройте глаза.',
-      audio: '27_lancelots_zakroyte.mp3'
-    });
+    phrases.push({ text: 'Добрый Ланселот и злой Ланселот, откройте глаза, чтобы узнать друг друга.', audio: '26_lancelots_otkroyte.mp3' });
+    phrases.push({ text: 'Добрый Ланселот и злой Ланселот, закройте глаза.', audio: '27_lancelots_zakroyte.mp3' });
   }
 
   // --- Этап 8: Завершение ---
-  phrases.push({
-    text: 'Все игроки, откройте глаза.',
-    audio: '28_vse_otkroyte.mp3'
-  });
+  phrases.push({ text: 'Все игроки, откройте глаза.', audio: '28_vse_otkroyte.mp3' });
 
   return phrases;
 }
@@ -391,7 +597,7 @@ function buildPhrases(selected) {
 let currentPhrases = [];
 let currentIndex = -1;
 let isPlaying = false;
-let voiceMode = 'tts'; // 'tts' или 'audio'
+let voiceMode = 'tts';
 let selectedChars = [];
 
 // ====================== РЕНДЕР ПЕРСОНАЖЕЙ ======================
@@ -403,7 +609,16 @@ function renderCharacters() {
     const div = document.createElement('div');
     div.className = 'char-card' + (c.base ? ' active' : '');
     div.dataset.id = c.id;
-    div.innerHTML = `<span class="icon">${c.icon}</span>${c.name}`;
+
+    const isImage = c.icon.startsWith('img/');
+    const iconHTML = isImage
+      ? `<img src="${c.icon}" alt="${c.name}" onerror="this.replaceWith(document.createTextNode('${c.name[0]}'))">`
+      : c.icon;
+
+    div.innerHTML = `
+      <div class="char-icon">${iconHTML}</div>
+      <div class="char-name">${c.name}</div>
+    `;
     div.onclick = () => toggleCharacter(c.id);
     list.appendChild(div);
   });
@@ -464,10 +679,15 @@ function nextPhrase() {
   }
 
   const phrase = currentPhrases[currentIndex];
-  document.getElementById('phraseDisplay').textContent = phrase.text;
-  document.getElementById('progress').textContent =
-    `Фраза ${currentIndex + 1} из ${currentPhrases.length}`;
+  const display = document.getElementById('phraseDisplay');
 
+  // Анимация появления
+  display.textContent = phrase.text;
+  display.classList.remove('fade-in');
+  void display.offsetWidth;
+  display.classList.add('fade-in');
+
+  updateProgress();
   highlightLog(currentIndex);
 
   if (voiceMode === 'tts') {
@@ -475,6 +695,14 @@ function nextPhrase() {
   } else {
     playAudio(phrase.audio, nextPhrase);
   }
+}
+
+function updateProgress() {
+  const total = currentPhrases.length;
+  const current = currentIndex + 1;
+  const percent = total > 0 ? (current / total) * 100 : 0;
+  document.getElementById('progressFill').style.width = percent + '%';
+  document.getElementById('progress').textContent = `Фраза ${current} из ${total}`;
 }
 
 function speakTTS(text, callback) {
@@ -513,16 +741,21 @@ function pauseSequence() {
   document.getElementById('audioPlayer').pause();
   document.getElementById('btnPause').disabled = true;
   document.getElementById('btnStart').disabled = false;
-  document.getElementById('btnStart').textContent = '▶️ Продолжить';
+  document.getElementById('btnStart').textContent = '▶ Продолжить';
 }
 
 function finishSequence() {
   isPlaying = false;
-  document.getElementById('phraseDisplay').textContent = '✅ Знакомство завершено!';
+  const display = document.getElementById('phraseDisplay');
+  display.textContent = '✅ Знакомство завершено!';
+  display.classList.remove('fade-in');
+  void display.offsetWidth;
+  display.classList.add('fade-in');
+
   document.getElementById('btnStart').disabled = false;
   document.getElementById('btnPause').disabled = true;
   document.getElementById('btnNext').disabled = true;
-  document.getElementById('btnStart').textContent = '▶️ Старт';
+  document.getElementById('btnStart').textContent = '▶ Старт';
 }
 
 function resetSequence() {
@@ -532,11 +765,12 @@ function resetSequence() {
   currentIndex = -1;
   currentPhrases = [];
   document.getElementById('phraseDisplay').textContent = 'Нажмите «Старт», чтобы начать';
+  document.getElementById('progressFill').style.width = '0%';
   document.getElementById('progress').textContent = 'Фраза 0 из 0';
   document.getElementById('btnStart').disabled = false;
   document.getElementById('btnPause').disabled = true;
   document.getElementById('btnNext').disabled = true;
-  document.getElementById('btnStart').textContent = '▶️ Старт';
+  document.getElementById('btnStart').textContent = '▶ Старт';
   document.getElementById('log').innerHTML = '';
 }
 
@@ -564,7 +798,7 @@ function highlightLog(index) {
 
 // ====================== РЕЖИМ ГОЛОСА ======================
 
-function setVoiceMode(mode) {
+function setVoiceMode(mode, event) {
   voiceMode = mode;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');

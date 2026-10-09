@@ -232,7 +232,6 @@
   .phrase-display::before { top: 10px; left: 15px; }
   .phrase-display::after { bottom: 10px; right: 15px; }
 
-  /* ==== Таймер задержки ==== */
   .delay-control {
     display: flex;
     align-items: center;
@@ -276,7 +275,6 @@
     font-size: 12px;
   }
 
-  /* ==== Индикатор обратного отсчёта ==== */
   .countdown {
     text-align: center;
     color: #c9a227;
@@ -429,7 +427,6 @@
   <div class="panel">
     <h3>Проигрыватель</h3>
 
-    <!-- ==== Настройка задержки ==== -->
     <div class="delay-control">
       <label for="delayInput">⏱ Задержка:</label>
       <input type="number" id="delayInput" value="5" min="0" max="60" step="1">
@@ -500,7 +497,7 @@ function buildPhrases(selected) {
   const has = (id) => selected.includes(id);
   const phrases = [];
 
-  // --- Этап 1 ---
+  // --- Этап 1: Подготовка ---
   phrases.push({
     text: 'Все игроки, закройте глаза и положите перед собой сжатую в кулак руку.',
     audio: 'audio/01_vse_zakroyte_glaza.mp3'
@@ -512,47 +509,53 @@ function buildPhrases(selected) {
   const hasLancelotE  = has('lancelot_e');
   const hasHuntress   = has('huntress');
 
-  if (hasHuntress) {
-    phrases.push({
-      text: 'Слепая охотница, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
-      audio: 'audio/02_huntress_palec.mp3'
-    });
-  }
-  if (hasRenegade) {
-    phrases.push({
-      text: 'Перебежчик, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
-      audio: 'audio/03_renegade_palec.mp3'
-    });
-  }
-  if (hasLancelotE) {
-    phrases.push({
-      text: 'Злой Ланселот, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
-      audio: 'audio/04_lancelot_e_palec.mp3'
-    });
-  }
+  // Список «прячущихся» в порядке знакомства: Охотница → Перебежчик → Ланселот
+  // (Чужак знакомится отдельно, в этапе 3)
+  const sneaky = [];
+  if (hasHuntress)  sneaky.push({
+    id: 'huntress',
+    upText:   'Слепая охотница, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+    upAudio:  'audio/02_huntress_palec.mp3',
+    downText: 'Слепая охотница, убери большой палец.',
+    downAudio:'audio/07_huntress_ubral.mp3'
+  });
+  if (hasRenegade)  sneaky.push({
+    id: 'renegade',
+    upText:   'Перебежчик, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+    upAudio:  'audio/03_renegade_palec.mp3',
+    downText: 'Перебежчик, убери большой палец.',
+    downAudio:'audio/08_renegade_ubral.mp3'
+  });
+  if (hasLancelotE) sneaky.push({
+    id: 'lancelot_e',
+    upText:   'Злой Ланселот, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+    upAudio:  'audio/04_lancelot_e_palec.mp3',
+    downText: 'Злой Ланселот, убери большой палец.',
+    downAudio:'audio/09_lancelot_e_ubral.mp3'
+  });
 
   // Динамическая фраза злых (16 вариантов)
-  const hidden = [];
-  if (hasOutsider)  hidden.push('чужака');
-  if (hasRenegade)  hidden.push('перебежчика');
-  if (hasLancelotE) hidden.push('злого Ланселота');
-  if (hasHuntress)  hidden.push('слепой охотницы');
+  const hiddenForText = [];
+  if (hasOutsider)  hiddenForText.push('чужака');
+  if (hasRenegade)  hiddenForText.push('перебежчика');
+  if (hasLancelotE) hiddenForText.push('злого Ланселота');
+  if (hasHuntress)  hiddenForText.push('слепой охотницы');
 
-  let evilText;
-  if (hidden.length === 0) {
-    evilText = 'Приверженцы зла, откройте глаза и оглядитесь, чтобы узнать друг друга.';
-  } else if (hidden.length === 1) {
-    evilText = `Приверженцы зла, кроме ${hidden[0]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
-  } else if (hidden.length === 2) {
-    evilText = `Приверженцы зла, кроме ${hidden[0]} и ${hidden[1]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
-  } else if (hidden.length === 3) {
-    evilText = `Приверженцы зла, кроме ${hidden[0]}, ${hidden[1]} и ${hidden[2]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
+  let evilOpenText;
+  if (hiddenForText.length === 0) {
+    evilOpenText = 'Приверженцы зла, откройте глаза и оглядитесь, чтобы узнать друг друга.';
+  } else if (hiddenForText.length === 1) {
+    evilOpenText = `Приверженцы зла, кроме ${hiddenForText[0]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
+  } else if (hiddenForText.length === 2) {
+    evilOpenText = `Приверженцы зла, кроме ${hiddenForText[0]} и ${hiddenForText[1]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
+  } else if (hiddenForText.length === 3) {
+    evilOpenText = `Приверженцы зла, кроме ${hiddenForText[0]}, ${hiddenForText[1]} и ${hiddenForText[2]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
   } else {
-    evilText = `Приверженцы зла, кроме ${hidden[0]}, ${hidden[1]}, ${hidden[2]} и ${hidden[3]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
+    evilOpenText = `Приверженцы зла, кроме ${hiddenForText[0]}, ${hiddenForText[1]}, ${hiddenForText[2]} и ${hiddenForText[3]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
   }
 
-  const key = (hasOutsider ? '1' : '0') + (hasRenegade ? '1' : '0') + (hasLancelotE ? '1' : '0') + (hasHuntress ? '1' : '0');
-  const audioMap = {
+  const evilKey = (hasOutsider ? '1' : '0') + (hasRenegade ? '1' : '0') + (hasLancelotE ? '1' : '0') + (hasHuntress ? '1' : '0');
+  const evilAudioMap = {
     '0000': 'audio/05_00_clean.mp3',
     '1000': 'audio/05_01_outsider.mp3',
     '0100': 'audio/05_02_renegade.mp3',
@@ -570,22 +573,20 @@ function buildPhrases(selected) {
     '0111': 'audio/05_14_renegade_lancelot_huntress.mp3',
     '1111': 'audio/05_15_all.mp3'
   };
+  const evilOpenAudio = evilAudioMap[evilKey] || 'audio/05_00_clean.mp3';
 
-  phrases.push({
-    text: evilText,
-    audio: audioMap[key] || 'audio/05_00_clean.mp3'
-  });
-
-  phrases.push({ text: 'Приверженцы зла, закройте глаза.', audio: 'audio/06_evil_zakroyte.mp3' });
-
-  if (hasHuntress) {
-    phrases.push({ text: 'Слепая охотница, убери большой палец.', audio: 'audio/07_huntress_ubral.mp3' });
-  }
-  if (hasRenegade) {
-    phrases.push({ text: 'Перебежчик, убери большой палец.', audio: 'audio/08_renegade_ubral.mp3' });
-  }
-  if (hasLancelotE) {
-    phrases.push({ text: 'Злой Ланселот, убери большой палец.', audio: 'audio/09_lancelot_e_ubral.mp3' });
+  if (sneaky.length === 0) {
+    // Никто не «прячется» — просто знакомство злых
+    phrases.push({ text: evilOpenText, audio: evilOpenAudio });
+    phrases.push({ text: 'Приверженцы зла, закройте глаза.', audio: 'audio/06_evil_zakroyte.mp3' });
+  } else {
+    // Каждый «прячущийся» знакомится отдельно: подъём → открытие → закрытие → опускание
+    sneaky.forEach(person => {
+      phrases.push({ text: person.upText, audio: person.upAudio });
+      phrases.push({ text: evilOpenText, audio: evilOpenAudio });
+      phrases.push({ text: 'Приверженцы зла, закройте глаза.', audio: 'audio/06_evil_zakroyte.mp3' });
+      phrases.push({ text: person.downText, audio: person.downAudio });
+    });
   }
 
   // --- Этап 3: Чужак ---
@@ -638,8 +639,8 @@ let currentPhrases = [];
 let currentIndex = -1;
 let isPlaying = false;
 let selectedChars = [];
-let delayTimer = null;      // таймер задержки
-let countdownTimer = null;  // таймер обратного отсчёта
+let delayTimer = null;
+let countdownTimer = null;
 
 // ====================== РЕНДЕР ПЕРСОНАЖЕЙ ======================
 
@@ -776,7 +777,6 @@ function nextPhrase() {
   updateProgress();
   highlightLog(currentIndex);
 
-  // Играем аудио, и после его окончания запускаем задержку
   playAudio(phrase.audio, () => {
     if (!isPlaying) return;
     startDelay(nextPhrase);
@@ -795,14 +795,12 @@ function playAudio(src, callback) {
   const player = document.getElementById('audioPlayer');
   player.src = src;
 
-  // Убираем предыдущие обработчики
   player.onended = null;
   player.onerror = null;
 
   player.onended = () => callback();
   player.onerror = () => {
     console.warn(`Аудиофайл не найден: ${src}`);
-    // Даже если файла нет — идём дальше через задержку
     callback();
   };
 

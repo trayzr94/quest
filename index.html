@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Тайный Грааль — Диалоги знакомства</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 { color: #f4c542; margin-bottom: 5px; }
+  h2 { color: #c9a227; font-size: 18px; margin-top: 0; }
+
+  .container {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .panel {
+    background: #16213e;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .characters {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .char-card {
+    background: #0f3460;
+    border: 2px solid #1a1a2e;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    font-size: 13px;
+    user-select: none;
+  }
+
+  .char-card:hover { border-color: #f4c542; }
+
+  .char-card.active {
+    background: #533483;
+    border-color: #f4c542;
+    box-shadow: 0 0 10px #f4c542;
+  }
+
+  .char-card .icon { font-size: 24px; display: block; margin-bottom: 5px; }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    background: #f4c542;
+    color: #1a1a2e;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.1s;
+  }
+
+  button:hover { transform: scale(1.05); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .phrase-display {
+    background: #0f3460;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    font-size: 22px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    line-height: 1.4;
+    border: 2px solid #533483;
+  }
+
+  .progress {
+    color: #aaa;
+    font-size: 14px;
+    margin-top: 5px;
+  }
+
+  .log {
+    max-height: 250px;
+    overflow-y: auto;
+    background: #0a0a1a;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    margin-top: 15px;
+  }
+
+  .log-item {
+    padding: 5px 8px;
+    border-bottom: 1px solid #222;
+    color: #888;
+  }
+
+  .log-item.current {
+    color: #f4c542;
+    font-weight: bold;
+    background: #1a1a2e;
+    border-radius: 4px;
+  }
+
+  audio { display: none; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 15px; }
+  .tab {
+    padding: 6px 12px;
+    background: #0f3460;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .tab.active { background: #533483; color: #f4c542; }
+</style>
+</head>
+<body>
+
+<h1>⚔️ Тайный Грааль</h1>
+<h2>Интерактивный проигрыватель диалогов знакомства</h2>
+
+<div class="container">
+
+  <!-- ЛЕВАЯ ПАНЕЛЬ: выбор персонажей -->
+  <div class="panel">
+    <h3>Выберите персонажей в игре:</h3>
+    <div class="characters" id="charactersList"></div>
+    <div class="controls">
+      <button onclick="selectAll()">Все</button>
+      <button onclick="selectNone()">Никого</button>
+      <button onclick="selectBase()">Базовые</button>
+    </div>
+  </div>
+
+  <!-- ПРАВАЯ ПАНЕЛЬ: проигрыватель -->
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" onclick="setVoiceMode('tts')">🔊 Синтез речи</div>
+      <div class="tab" onclick="setVoiceMode('audio')">🎵 Аудиофайлы</div>
+    </div>
+
+    <div class="phrase-display" id="phraseDisplay">
+      Нажмите «Старт», чтобы начать
+    </div>
+
+    <div class="progress" id="progress">Фраза 0 из 0</div>
+
+    <div class="controls">
+      <button id="btnStart" onclick="startSequence()">▶️ Старт</button>
+      <button id="btnPause" onclick="pauseSequence()" disabled>⏸️ Пауза</button>
+      <button id="btnNext" onclick="nextPhrase()" disabled>⏭️ Далее</button>
+      <button id="btnReset" onclick="resetSequence()">🔄 Сброс</button>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+</div>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+// ====================== ДАННЫЕ ======================
+
+// Список всех персонажей с их характеристиками
+const ALL_CHARACTERS = [
+  { id: 'arthur',      name: 'Артур',         icon: '👑', faction: 'good', base: false },
+  { id: 'morgana',     name: 'Леди Моргана',  icon: '🧙‍♀️', faction: 'evil', base: true  },
+  { id: 'heir',        name: 'Наследница',    icon: '👸', faction: 'evil', base: false },
+  { id: 'werewolf',    name: 'Оборотень',     icon: '🐺', faction: 'evil', base: false },
+  { id: 'duke',        name: 'Герцог',        icon: '🛡️', faction: 'good', base: false },
+  { id: 'count',       name: 'Граф',          icon: '⚜️', faction: 'good', base: false },
+  { id: 'priest',      name: 'Священник',     icon: '⛪', faction: 'good', base: false },
+  { id: 'huntress',    name: 'Слепая охотница', icon: '🏹', faction: 'evil', base: false },
+  { id: 'renegade',    name: 'Перебежчик',    icon: '🔄', faction: 'evil', base: false },
+  { id: 'percival',    name: 'Персиваль',     icon: '🦅', faction: 'good', base: false },
+  { id: 'lancelot_g',  name: 'Добрый Ланселот', icon: '⚔️', faction: 'good', base: false },
+  { id: 'lancelot_e',  name: 'Злой Ланселот', icon: '🗡️', faction: 'evil', base: false },
+  { id: 'outsider',    name: 'Чужак',         icon: '👤', faction: 'evil', base: false },
+  { id: 'guardian',    name: 'Стражница',     icon: '🔮', faction: 'good', base: false },
+  { id: 'trickster',   name: 'Мошенница',     icon: '🎭', faction: 'evil', base: false },
+  { id: 'accuser',     name: 'Обличительница', icon: '⚖️', faction: 'evil', base: false },
+  { id: 'madman',      name: 'Безумец',       icon: '🤪', faction: 'evil', base: false },
+  { id: 'brute',       name: 'Верзила',       icon: '💪', faction: 'evil', base: false },
+  { id: 'apprentice',  name: 'Подмастерье',   icon: '🔨', faction: 'good', base: false },
+  { id: 'rebel',       name: 'Смутьянка',     icon: '🌪️', faction: 'good', base: false },
+  { id: 'youth',       name: 'Юнец',          icon: '🧒', faction: 'good', base: false },
+  { id: 'reluctant',   name: 'Лидер поневоле', icon: '😰', faction: 'good', base: false },
+  { id: 'braggart',    name: 'Хвастун',       icon: '📢', faction: 'evil', base: false },
+  { id: 'saboteur',    name: 'Диверсант',     icon: '💣', faction: 'evil', base: false },
+  { id: 'galahad',     name: 'Галахад',       icon: '🏆', faction: 'good', base: false },
+];
+
+// ====================== ГЕНЕРАЦИЯ ФРАЗ ======================
+
+/**
+ * Строит последовательность фраз на основе выбранных персонажей.
+ */
+function buildPhrases(selected) {
+  const has = (id) => selected.includes(id);
+  const phrases = [];
+
+  // --- Этап 1: Подготовка ---
+  phrases.push({
+    text: 'Все игроки, закройте глаза и положите перед собой сжатую в кулак руку.',
+    audio: '01_vse_zakroyte_glaza.mp3'
+  });
+
+  // --- Этап 2: Злые (кроме Чужака и Слепой охотницы) ---
+  if (has('huntress')) {
+    phrases.push({
+      text: 'Слепая охотница, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+      audio: '02_huntress_palec.mp3'
+    });
+  }
+  if (has('renegade')) {
+    phrases.push({
+      text: 'Перебежчик, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+      audio: '03_renegade_palec.mp3'
+    });
+  }
+  if (has('lancelot_e')) {
+    phrases.push({
+      text: 'Злой Ланселот, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
+      audio: '04_lancelot_e_palec.mp3'
+    });
+  }
+
+  phrases.push({
+    text: 'Приверженцы зла, кроме чужака, перебежчика, злого Ланселота и слепой охотницы, откройте глаза и оглядитесь, чтобы узнать друг друга.',
+    audio: '05_evil_otkroyte.mp3'
+  });
+
+  phrases.push({
+    text: 'Приверженцы зла, закройте глаза.',
+    audio: '06_evil_zakroyte.mp3'
+  });
+
+  if (has('huntress')) {
+    phrases.push({
+      text: 'Слепая охотница, убери большой палец.',
+      audio: '07_huntress_ubral.mp3'
+    });
+  }
+  if (has('renegade')) {
+    phrases.push({
+      text: 'Перебежчик, убери большой палец.',
+      audio: '08_renegade_ubral.mp3'
+    });
+  }
+  if (has('lancelot_e')) {
+    phrases.push({
+      text: 'Злой Ланселот, убери большой палец.',
+      audio: '09_lancelot_e_ubral.mp3'
+    });
+  }
+
+  // --- Этап 3: Чужак ---
+  if (has('outsider')) {
+    phrases.push({
+      text: 'Приверженцы зла, поднимите большой палец.',
+      audio: '10_evil_palec_up.mp3'
+    });
+    phrases.push({
+      text: 'Чужак, открой глаза и оглядись, чтобы узнать приверженцев зла.',
+      audio: '11_outsider_otkroy.mp3'
+    });
+    phrases.push({
+      text: 'Чужак, закрой глаза.',
+      audio: '12_outsider_zakroy.mp3'
+    });
+    phrases.push({
+      text: 'Приверженцы зла, уберите большой палец.',
+      audio: '13_evil_palec_down.mp3'
+    });
+  }
+
+  // --- Этап 4: Артур и Леди Моргана ---
+  if (has('arthur')) {
+    phrases.push({
+      text: 'Леди Моргана, подними большой палец, чтобы Артур узнал, кто ты.',
+      audio: '14_morgana_palec.mp3'
+    });
+    phrases.push({
+      text: 'Артур, открой глаза и оглядись, чтобы узнать, кто леди Моргана.',
+      audio: '15_arthur_otkroy.mp3'
+    });
+    phrases.push({
+      text: 'Артур, закрой глаза.',
+      audio: '16_arthur_zakroy.mp3'
+    });
+    phrases.push({
+      text: 'Леди Моргана, убери большой палец.',
+      audio: '17_morgana_ubrala.mp3'
+    });
+  }
+
+  // --- Этап 5: Священник и Персиваль ---
+  if (has('priest') && has('percival')) {
+    phrases.push({
+      text: 'Священник, подними большой палец, чтобы Персиваль узнал, кто ты.',
+      audio: '18_priest_palec.mp3'
+    });
+    phrases.push({
+      text: 'Персиваль, открой глаза и оглядись, чтобы узнать, кто священник.',
+      audio: '19_percival_otkroy.mp3'
+    });
+    phrases.push({
+      text: 'Персиваль, закрой глаза.',
+      audio: '20_percival_zakroy.mp3'
+    });
+    phrases.push({
+      text: 'Священник, убери большой палец.',
+      audio: '21_priest_ubral.mp3'
+    });
+  }
+
+  // --- Этап 6: Священник и Лидер ---
+  if (has('priest')) {
+    phrases.push({
+      text: 'Лидер, подними большой палец, если ты приверженец зла.',
+      audio: '22_leader_palec.mp3'
+    });
+    phrases.push({
+      text: 'Священник, открой глаза.',
+      audio: '23_priest_otkroy.mp3'
+    });
+    phrases.push({
+      text: 'Священник, закрой глаза.',
+      audio: '24_priest_zakroy.mp3'
+    });
+    phrases.push({
+      text: 'Лидер, убери большой палец.',
+      audio: '25_leader_ubral.mp3'
+    });
+  }
+
+  // --- Этап 7: Ланселоты ---
+  if (has('lancelot_g') && has('lancelot_e')) {
+    phrases.push({
+      text: 'Добрый Ланселот и злой Ланселот, откройте глаза, чтобы узнать друг друга.',
+      audio: '26_lancelots_otkroyte.mp3'
+    });
+    phrases.push({
+      text: 'Добрый Ланселот и злой Ланселот, закройте глаза.',
+      audio: '27_lancelots_zakroyte.mp3'
+    });
+  }
+
+  // --- Этап 8: Завершение ---
+  phrases.push({
+    text: 'Все игроки, откройте глаза.',
+    audio: '28_vse_otkroyte.mp3'
+  });
+
+  return phrases;
+}
+
+// ====================== СОСТОЯНИЕ ======================
+
+let currentPhrases = [];
+let currentIndex = -1;
+let isPlaying = false;
+let voiceMode = 'tts'; // 'tts' или 'audio'
+let selectedChars = [];
+
+// ====================== РЕНДЕР ПЕРСОНАЖЕЙ ======================
+
+function renderCharacters() {
+  const list = document.getElementById('charactersList');
+  list.innerHTML = '';
+  ALL_CHARACTERS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'char-card' + (c.base ? ' active' : '');
+    div.dataset.id = c.id;
+    div.innerHTML = `<span class="icon">${c.icon}</span>${c.name}`;
+    div.onclick = () => toggleCharacter(c.id);
+    list.appendChild(div);
+  });
+}
+
+function toggleCharacter(id) {
+  const el = document.querySelector(`.char-card[data-id="${id}"]`);
+  el.classList.toggle('active');
+}
+
+function getSelected() {
+  return Array.from(document.querySelectorAll('.char-card.active'))
+    .map(el => el.dataset.id);
+}
+
+function selectAll() {
+  document.querySelectorAll('.char-card').forEach(el => el.classList.add('active'));
+}
+function selectNone() {
+  document.querySelectorAll('.char-card').forEach(el => el.classList.remove('active'));
+}
+function selectBase() {
+  document.querySelectorAll('.char-card').forEach(el => {
+    const char = ALL_CHARACTERS.find(c => c.id === el.dataset.id);
+    if (char.base) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+}
+
+// ====================== ЛОГИКА ПРОИГРЫВАНИЯ ======================
+
+function startSequence() {
+  selectedChars = getSelected();
+  if (selectedChars.length === 0) {
+    alert('Выберите хотя бы одного персонажа!');
+    return;
+  }
+
+  currentPhrases = buildPhrases(selectedChars);
+  currentIndex = -1;
+  isPlaying = true;
+
+  document.getElementById('btnStart').disabled = true;
+  document.getElementById('btnPause').disabled = false;
+  document.getElementById('btnNext').disabled = false;
+
+  renderLog();
+  nextPhrase();
+}
+
+function nextPhrase() {
+  if (!isPlaying) return;
+
+  currentIndex++;
+  if (currentIndex >= currentPhrases.length) {
+    finishSequence();
+    return;
+  }
+
+  const phrase = currentPhrases[currentIndex];
+  document.getElementById('phraseDisplay').textContent = phrase.text;
+  document.getElementById('progress').textContent =
+    `Фраза ${currentIndex + 1} из ${currentPhrases.length}`;
+
+  highlightLog(currentIndex);
+
+  if (voiceMode === 'tts') {
+    speakTTS(phrase.text, nextPhrase);
+  } else {
+    playAudio(phrase.audio, nextPhrase);
+  }
+}
+
+function speakTTS(text, callback) {
+  if (!('speechSynthesis' in window)) {
+    console.warn('Синтез речи не поддерживается');
+    setTimeout(callback, 2000);
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ru-RU';
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+  utterance.onend = () => setTimeout(callback, 400);
+  utterance.onerror = () => setTimeout(callback, 400);
+  window.speechSynthesis.speak(utterance);
+}
+
+function playAudio(src, callback) {
+  const player = document.getElementById('audioPlayer');
+  player.src = src;
+  player.onended = () => setTimeout(callback, 400);
+  player.onerror = () => {
+    console.warn(`Аудиофайл не найден: ${src}, использую TTS`);
+    speakTTS(currentPhrases[currentIndex].text, callback);
+  };
+  player.play().catch(() => {
+    console.warn(`Не удалось воспроизвести ${src}, использую TTS`);
+    speakTTS(currentPhrases[currentIndex].text, callback);
+  });
+}
+
+function pauseSequence() {
+  isPlaying = false;
+  window.speechSynthesis.cancel();
+  document.getElementById('audioPlayer').pause();
+  document.getElementById('btnPause').disabled = true;
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnStart').textContent = '▶️ Продолжить';
+}
+
+function finishSequence() {
+  isPlaying = false;
+  document.getElementById('phraseDisplay').textContent = '✅ Знакомство завершено!';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnPause').disabled = true;
+  document.getElementById('btnNext').disabled = true;
+  document.getElementById('btnStart').textContent = '▶️ Старт';
+}
+
+function resetSequence() {
+  window.speechSynthesis.cancel();
+  document.getElementById('audioPlayer').pause();
+  isPlaying = false;
+  currentIndex = -1;
+  currentPhrases = [];
+  document.getElementById('phraseDisplay').textContent = 'Нажмите «Старт», чтобы начать';
+  document.getElementById('progress').textContent = 'Фраза 0 из 0';
+  document.getElementById('btnStart').disabled = false;
+  document.getElementById('btnPause').disabled = true;
+  document.getElementById('btnNext').disabled = true;
+  document.getElementById('btnStart').textContent = '▶️ Старт';
+  document.getElementById('log').innerHTML = '';
+}
+
+// ====================== ЛОГ ======================
+
+function renderLog() {
+  const log = document.getElementById('log');
+  log.innerHTML = '';
+  currentPhrases.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.dataset.index = i;
+    div.textContent = `${i + 1}. ${p.text}`;
+    log.appendChild(div);
+  });
+}
+
+function highlightLog(index) {
+  document.querySelectorAll('.log-item').forEach(el => {
+    el.classList.toggle('current', parseInt(el.dataset.index) === index);
+  });
+  const current = document.querySelector('.log-item.current');
+  if (current) current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// ====================== РЕЖИМ ГОЛОСА ======================
+
+function setVoiceMode(mode) {
+  voiceMode = mode;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// ====================== ИНИЦИАЛИЗАЦИЯ ======================
+
+renderCharacters();
+</script>
+
+</body>
+</html>

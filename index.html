@@ -232,6 +232,61 @@
   .phrase-display::before { top: 10px; left: 15px; }
   .phrase-display::after { bottom: 10px; right: 15px; }
 
+  /* ==== Таймер задержки ==== */
+  .delay-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: #0a0e1a;
+    border: 1px solid #3a4a6b;
+    border-radius: 8px;
+  }
+
+  .delay-control label {
+    color: #c9a227;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .delay-control input {
+    width: 70px;
+    padding: 6px 10px;
+    background: #1a2340;
+    border: 1px solid #c9a227;
+    border-radius: 6px;
+    color: #f4d03f;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    outline: none;
+  }
+
+  .delay-control input:focus {
+    box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+  }
+
+  .delay-control span {
+    color: #8b9bb4;
+    font-size: 12px;
+  }
+
+  /* ==== Индикатор обратного отсчёта ==== */
+  .countdown {
+    text-align: center;
+    color: #c9a227;
+    font-size: 14px;
+    letter-spacing: 2px;
+    min-height: 20px;
+    margin-top: 10px;
+    font-family: 'MedievalSharp', serif;
+  }
+
   .progress-wrapper { margin-bottom: 15px; }
 
   .progress-bar {
@@ -343,40 +398,6 @@
 
   audio { display: none; }
 
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
-    justify-content: center;
-  }
-
-  .tab {
-    padding: 8px 16px;
-    background: #0a0e1a;
-    border: 1px solid #3a4a6b;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #8b9bb4;
-    transition: all 0.2s ease;
-    font-family: 'Cinzel', serif;
-    font-weight: 600;
-  }
-
-  .tab:hover {
-    border-color: #c9a227;
-    color: #c9a227;
-  }
-
-  .tab.active {
-    background: linear-gradient(145deg, #3a2a0a, #1a1205);
-    border-color: #f4d03f;
-    color: #f4d03f;
-    box-shadow: 0 0 12px rgba(244, 208, 63, 0.4);
-  }
-
   @media (max-width: 700px) {
     h1 { font-size: 28px; letter-spacing: 2px; }
     .subtitle { font-size: 11px; letter-spacing: 2px; }
@@ -408,14 +429,18 @@
   <div class="panel">
     <h3>Проигрыватель</h3>
 
-    <div class="tabs">
-      <div class="tab active" onclick="setVoiceMode('tts', event)">🔊 Синтез речи</div>
-      <div class="tab" onclick="setVoiceMode('audio', event)">🎵 Аудиофайлы</div>
+    <!-- ==== Настройка задержки ==== -->
+    <div class="delay-control">
+      <label for="delayInput">⏱ Задержка:</label>
+      <input type="number" id="delayInput" value="5" min="0" max="60" step="1">
+      <span>секунд</span>
     </div>
 
     <div class="phrase-display" id="phraseDisplay">
       Нажмите «Старт», чтобы начать
     </div>
+
+    <div class="countdown" id="countdown"></div>
 
     <div class="progress-wrapper">
       <div class="progress-bar">
@@ -475,20 +500,18 @@ function buildPhrases(selected) {
   const has = (id) => selected.includes(id);
   const phrases = [];
 
-  // --- Этап 1: Подготовка ---
+  // --- Этап 1 ---
   phrases.push({
     text: 'Все игроки, закройте глаза и положите перед собой сжатую в кулак руку.',
     audio: 'audio/01_vse_zakroyte_glaza.mp3'
   });
 
   // --- Этап 2: Злые ---
-  // Флаги для «прячущихся»
   const hasOutsider   = has('outsider');
   const hasRenegade   = has('renegade');
   const hasLancelotE  = has('lancelot_e');
   const hasHuntress   = has('huntress');
 
-  // Фразы для поднимающих палец
   if (hasHuntress) {
     phrases.push({
       text: 'Слепая охотница, подними большой палец, чтобы приверженцы зла узнали, кто ты.',
@@ -508,16 +531,13 @@ function buildPhrases(selected) {
     });
   }
 
-  // === ДИНАМИЧЕСКАЯ ФРАЗА ЗЛЫХ (16 вариантов) ===
-  // Строим список "прячущихся" в фиксированном порядке:
-  // Чужак → Перебежчик → Злой Ланселот → Слепая охотница
+  // Динамическая фраза злых (16 вариантов)
   const hidden = [];
   if (hasOutsider)  hidden.push('чужака');
   if (hasRenegade)  hidden.push('перебежчика');
   if (hasLancelotE) hidden.push('злого Ланселота');
   if (hasHuntress)  hidden.push('слепой охотницы');
 
-  // Строим текст
   let evilText;
   if (hidden.length === 0) {
     evilText = 'Приверженцы зла, откройте глаза и оглядитесь, чтобы узнать друг друга.';
@@ -531,7 +551,6 @@ function buildPhrases(selected) {
     evilText = `Приверженцы зла, кроме ${hidden[0]}, ${hidden[1]}, ${hidden[2]} и ${hidden[3]}, откройте глаза и оглядитесь, чтобы узнать друг друга.`;
   }
 
-  // Определяем имя файла (16 вариантов)
   const key = (hasOutsider ? '1' : '0') + (hasRenegade ? '1' : '0') + (hasLancelotE ? '1' : '0') + (hasHuntress ? '1' : '0');
   const audioMap = {
     '0000': 'audio/05_00_clean.mp3',
@@ -559,7 +578,6 @@ function buildPhrases(selected) {
 
   phrases.push({ text: 'Приверженцы зла, закройте глаза.', audio: 'audio/06_evil_zakroyte.mp3' });
 
-  // Убираем пальцы
   if (hasHuntress) {
     phrases.push({ text: 'Слепая охотница, убери большой палец.', audio: 'audio/07_huntress_ubral.mp3' });
   }
@@ -619,8 +637,9 @@ function buildPhrases(selected) {
 let currentPhrases = [];
 let currentIndex = -1;
 let isPlaying = false;
-let voiceMode = 'tts';
 let selectedChars = [];
+let delayTimer = null;      // таймер задержки
+let countdownTimer = null;  // таймер обратного отсчёта
 
 // ====================== РЕНДЕР ПЕРСОНАЖЕЙ ======================
 
@@ -670,6 +689,50 @@ function selectBase() {
   });
 }
 
+// ====================== ЗАДЕРЖКА ======================
+
+function getDelay() {
+  const val = parseInt(document.getElementById('delayInput').value, 10);
+  if (isNaN(val) || val < 0) return 5;
+  if (val > 60) return 60;
+  return val;
+}
+
+function startDelay(callback) {
+  const delay = getDelay();
+  const countdownEl = document.getElementById('countdown');
+
+  if (delay === 0) {
+    countdownEl.textContent = '';
+    callback();
+    return;
+  }
+
+  let remaining = delay;
+  countdownEl.textContent = `⏳ Следующая фраза через ${remaining} с`;
+
+  countdownTimer = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      countdownEl.textContent = `⏳ Следующая фраза через ${remaining} с`;
+    } else {
+      countdownEl.textContent = '';
+    }
+  }, 1000);
+
+  delayTimer = setTimeout(() => {
+    clearInterval(countdownTimer);
+    countdownEl.textContent = '';
+    callback();
+  }, delay * 1000);
+}
+
+function clearDelays() {
+  if (delayTimer) { clearTimeout(delayTimer); delayTimer = null; }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  document.getElementById('countdown').textContent = '';
+}
+
 // ====================== ЛОГИКА ПРОИГРЫВАНИЯ ======================
 
 function startSequence() {
@@ -694,7 +757,9 @@ function startSequence() {
 function nextPhrase() {
   if (!isPlaying) return;
 
+  clearDelays();
   currentIndex++;
+
   if (currentIndex >= currentPhrases.length) {
     finishSequence();
     return;
@@ -711,11 +776,11 @@ function nextPhrase() {
   updateProgress();
   highlightLog(currentIndex);
 
-  if (voiceMode === 'tts') {
-    speakTTS(phrase.text, nextPhrase);
-  } else {
-    playAudio(phrase.audio, nextPhrase);
-  }
+  // Играем аудио, и после его окончания запускаем задержку
+  playAudio(phrase.audio, () => {
+    if (!isPlaying) return;
+    startDelay(nextPhrase);
+  });
 }
 
 function updateProgress() {
@@ -726,39 +791,30 @@ function updateProgress() {
   document.getElementById('progress').textContent = `Фраза ${current} из ${total}`;
 }
 
-function speakTTS(text, callback) {
-  if (!('speechSynthesis' in window)) {
-    console.warn('Синтез речи не поддерживается');
-    setTimeout(callback, 2000);
-    return;
-  }
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ru-RU';
-  utterance.rate = 0.95;
-  utterance.pitch = 1;
-  utterance.onend = () => setTimeout(callback, 400);
-  utterance.onerror = () => setTimeout(callback, 400);
-  window.speechSynthesis.speak(utterance);
-}
-
 function playAudio(src, callback) {
   const player = document.getElementById('audioPlayer');
   player.src = src;
-  player.onended = () => setTimeout(callback, 400);
+
+  // Убираем предыдущие обработчики
+  player.onended = null;
+  player.onerror = null;
+
+  player.onended = () => callback();
   player.onerror = () => {
-    console.warn(`Аудиофайл не найден: ${src}, использую TTS`);
-    speakTTS(currentPhrases[currentIndex].text, callback);
+    console.warn(`Аудиофайл не найден: ${src}`);
+    // Даже если файла нет — идём дальше через задержку
+    callback();
   };
-  player.play().catch(() => {
-    console.warn(`Не удалось воспроизвести ${src}, использую TTS`);
-    speakTTS(currentPhrases[currentIndex].text, callback);
+
+  player.play().catch((err) => {
+    console.warn(`Не удалось воспроизвести ${src}:`, err);
+    callback();
   });
 }
 
 function pauseSequence() {
   isPlaying = false;
-  window.speechSynthesis.cancel();
+  clearDelays();
   document.getElementById('audioPlayer').pause();
   document.getElementById('btnPause').disabled = true;
   document.getElementById('btnStart').disabled = false;
@@ -767,6 +823,7 @@ function pauseSequence() {
 
 function finishSequence() {
   isPlaying = false;
+  clearDelays();
   const display = document.getElementById('phraseDisplay');
   display.textContent = '✅ Знакомство завершено!';
   display.classList.remove('fade-in');
@@ -780,7 +837,7 @@ function finishSequence() {
 }
 
 function resetSequence() {
-  window.speechSynthesis.cancel();
+  clearDelays();
   document.getElementById('audioPlayer').pause();
   isPlaying = false;
   currentIndex = -1;
@@ -815,14 +872,6 @@ function highlightLog(index) {
   });
   const current = document.querySelector('.log-item.current');
   if (current) current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-}
-
-// ====================== РЕЖИМ ГОЛОСА ======================
-
-function setVoiceMode(mode, event) {
-  voiceMode = mode;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
 }
 
 // ====================== ИНИЦИАЛИЗАЦИЯ ======================
